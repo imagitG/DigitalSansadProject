@@ -1,0 +1,79 @@
+version: "3.8"
+
+services:
+
+  auth-postgres:
+    image: postgres:15
+    container_name: auth-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+    volumes:
+      - auth_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  sow-postgres:
+    image: postgres:15
+    container_name: sow-postgres
+    environment:
+      POSTGRES_DB: sow_db
+      POSTGRES_USER: sow_user
+      POSTGRES_PASSWORD: sow_pass
+    volumes:
+      - sow_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-postgres
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: auth-postgres
+      DB_NAME: auth_db
+      DB_USERNAME: auth_user
+      DB_PASSWORD: auth_pass
+
+  sow-service:
+    build: ./sow-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - sow-postgres
+      - chatbot-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: sow-postgres
+      DB_NAME: sow_db
+      DB_USERNAME: sow_user
+      DB_PASSWORD: sow_pass
+      CHATBOT_SERVICE_URL: http://chatbot-service:8000
+
+  chatbot-service:
+    build: ./chatbot-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - faiss_data:/data
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - sow-service
+    environment:
+      NEXT_PUBLIC_AUTH_SERVICE_API: http://localhost:8080
+      NEXT_PUBLIC_SOW_SERVICE_API: http://localhost:8081
+      NEXT_PUBLIC_CHATBOT_SERVICE_API: http://localhost:8000
+
+volumes:
+  auth_pg_data:
+  sow_pg_data:
+  faiss_data:

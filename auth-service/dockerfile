@@ -1,0 +1,15 @@
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+# Copy everything (source + mvnw)
+# COPY . .
+COPY target/*.jar app.jar
+
+# Make mvnw executable
+# RUN chmod +x mvnw
+
+EXPOSE 8080
+
+# Dev-only command (hot reload, auto compile)
+ENTRYPOINT ["java", "-jar", "app.jar"]
