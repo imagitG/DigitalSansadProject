@@ -1,7 +1,7 @@
 package com.digitalSansad.auth.security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -19,11 +19,11 @@ public class JwtKeyProvider {
   private final PublicKey publicKey;
 
   public JwtKeyProvider(
-      @Value("${jwt.private-key}") Resource privateKeyResource,
-      @Value("${jwt.public-key}") Resource publicKeyResource) throws Exception {
+      @Value("${jwt.private-key}") String privateKeyValue,
+      @Value("${jwt.public-key}") String publicKeyValue) throws Exception {
 
-    this.privateKey = loadPrivateKey(privateKeyResource);
-    this.publicKey = loadPublicKey(publicKeyResource);
+    this.privateKey = loadPrivateKey(privateKeyValue);
+    this.publicKey = loadPublicKey(publicKeyValue);
   }
 
   public PrivateKey getPrivateKey() {
@@ -36,27 +36,56 @@ public class JwtKeyProvider {
 
   /* ================= INTERNAL ================= */
 
-  private PrivateKey loadPrivateKey(Resource resource) throws Exception {
-    try (InputStream is = resource.getInputStream()) {
-      byte[] keyBytes = decodePem(is.readAllBytes());
-      return KeyFactory.getInstance("RSA")
-          .generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+  private PrivateKey loadPrivateKey(String value) throws Exception {
+    byte[] keyBytes;
+
+    if (value.startsWith("classpath:")) {
+      // Load from file
+      try (InputStream is = new ClassPathResource(value.replace("classpath:", "")).getInputStream()) {
+        keyBytes = decodePem(is.readAllBytes());
+      }
+    } else {
+      // Load from ENV string
+      keyBytes = decodePem(value.trim().getBytes());
     }
+
+    return KeyFactory.getInstance("RSA")
+        .generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
   }
 
-  private PublicKey loadPublicKey(Resource resource) throws Exception {
-    try (InputStream is = resource.getInputStream()) {
-      byte[] keyBytes = decodePem(is.readAllBytes());
-      return KeyFactory.getInstance("RSA")
-          .generatePublic(new X509EncodedKeySpec(keyBytes));
+  private PublicKey loadPublicKey(String value) throws Exception {
+    byte[] keyBytes;
+
+    if (value.startsWith("classpath:")) {
+      // Load from file
+      try (InputStream is = new ClassPathResource(value.replace("classpath:", "")).getInputStream()) {
+        keyBytes = decodePem(is.readAllBytes());
+      }
+    } else {
+      // Load from ENV string
+      keyBytes = decodePem(value.trim().getBytes());
     }
+
+    return KeyFactory.getInstance("RSA")
+        .generatePublic(new X509EncodedKeySpec(keyBytes));
   }
 
-  private byte[] decodePem(byte[] pem) {
-    String content = new String(pem)
-        .replaceAll("-----BEGIN (.*)-----", "")
-        .replaceAll("-----END (.*)-----", "")
-        .replaceAll("\\s", "");
-    return Base64.getDecoder().decode(content);
+  private byte[] decodePem(byte[] pemBytes) {
+    String pem = new String(pemBytes);
+
+    // Clean headers
+    pem = pem.replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "");
+
+    // Remove ALL whitespace safely
+    pem = pem.replaceAll("\\s+", "");
+
+    try {
+      return Base64.getDecoder().decode(pem);
+    } catch (IllegalArgumentException e) {
+      throw new RuntimeException("Invalid PEM format. Check key encoding.", e);
+    }
   }
 }
