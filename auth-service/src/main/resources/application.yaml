@@ -1,3 +1,37 @@
+#this is for render
+
+spring:
+  application:
+    name: digital-sansad-backend
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-migration-naming: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  private-key: classpath:keys/private_key.pem
+  public-key: classpath:keys/public_key.pem
+  expiration: 86400000
+
+server:
+  port: ${PORT:8080}
+
+#below is for docker
 # spring:
 #   application:
 #     name: digital-sansad-backend
@@ -31,35 +65,35 @@
 #   port: ${SERVER_PORT:8080}
 
 # Below is the hardcoded configuration for local development
-spring:
-  application:
-    name: digital-sansad-backend
+# spring:
+#   application:
+#     name: digital-sansad-backend
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/Auth
-    username: postgres
-    password: user123
-    driver-class-name: org.postgresql.Driver
+#   datasource:
+#     url: jdbc:postgresql://localhost:5432/Auth
+#     username: postgres
+#     password: user123
+#     driver-class-name: org.postgresql.Driver
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    validate-migration-naming: true
+#   flyway:
+#     enabled: true
+#     locations: classpath:db/migration
+#     validate-migration-naming: true
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        default_schema: core
+#   jpa:
+#     hibernate:
+#       ddl-auto: validate
+#     show-sql: true
+#     properties:
+#       hibernate:
+#         format_sql: true
+#         default_schema: core
 
-jwt:
-  private-key: classpath:keys/private_key.pem
-  public-key: classpath:keys/public_key.pem
-  expiration: 86400000
+# jwt:
+#   private-key: classpath:keys/private_key.pem
+#   public-key: classpath:keys/public_key.pem
+#   expiration: 86400000
 
 
-server:
-  port: 8080
+# server:
+#   port: 8080
