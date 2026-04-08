@@ -21,6 +21,11 @@ public class AuthController {
     this.authService = authService;
   }
 
+  @GetMapping("/health") // auth/health
+  public String health() {
+    return "OK";
+  }
+
   @PostMapping("/signup")
   public ResponseEntity<AuthResponse> signup(
       @RequestBody SignupRequest req) {

@@ -17,4 +17,5 @@ public class TestController {
   public long countUsers() {
     return testService.countUsers();
   }
+
 }
