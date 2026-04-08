@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: digital-sansad-backend
@@ -29,7 +28,12 @@ jwt:
 
 server:
   port: ${PORT:8080}
+  address: 0.0.0.0
 
+logging:
+  level:
+    root: INFO
+    
 #below is for docker
 # spring:
 #   application:
