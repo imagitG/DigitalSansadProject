@@ -1,3 +1,65 @@
+# for prod
+spring:
+
+  main:
+      lazy-initialization: true
+
+  application:
+    name: sow-service
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 10000
+      initialization-fail-timeout: 10000
+
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+    validate-migration-naming: true
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: core
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+
+jwt:
+  public-key: ${JWT_PUBLIC_KEY}
+  expiration: 86400000
+
+r2:
+  bucket: ${R2_BUCKET_NAME}
+  endpoint: ${R2_ENDPOINT}
+  access-key: ${R2_ACCESS_KEY}
+  secret-key: ${R2_SECRET_KEY}
+
+# storage:
+#   sow:
+#     base-path: ./data/sow   # TEMP (will replace with R2 later)
+
+chatbot:
+  service:
+    url: ${CHATBOT_SERVICE_URL}
+
+server:
+  port: ${PORT:8081}
+  address: 0.0.0.0
+  servlet:
+    context-path: /   #defines the base URL path for all your endpoints.
+
 # spring:
 #   application:
 #     name: sow-service
@@ -43,46 +105,46 @@
 #   port: 8081
 
 # Below is the hardcoded configuration for local development
-spring:
-  application:
-    name: sow-service
+# spring:
+#   application:
+#     name: sow-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/sow_db
-    username: postgres
-    password: user123
-    driver-class-name: org.postgresql.Driver
+#   datasource:
+#     url: jdbc:postgresql://localhost:5432/sow_db
+#     username: postgres
+#     password: user123
+#     driver-class-name: org.postgresql.Driver
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    validate-migration-naming: true
+#   flyway:
+#     enabled: true
+#     locations: classpath:db/migration
+#     validate-migration-naming: true
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        default_schema: core
+#   jpa:
+#     hibernate:
+#       ddl-auto: validate
+#     show-sql: true
+#     properties:
+#       hibernate:
+#         format_sql: true
+#         default_schema: core
 
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
+# logging:
+#   level:
+#     org.hibernate.SQL: DEBUG
+#     org.hibernate.type.descriptor.sql: TRACE
     
-jwt:
-  public-key: classpath:keys/public_key.pem
-  expiration: 86400000
+# jwt:
+#   public-key: classpath:keys/public_key.pem
+#   expiration: 86400000
 
-storage:
-  sow:
-    base-path: ./data/sow
+# storage:
+#   sow:
+#     base-path: ./data/sow
 
-chatbot:
-  service:
-    url: http://localhost:8000
+# chatbot:
+#   service:
+#     url: http://localhost:8000
 
-server:
-  port: 8081
+# server:
+#   port: 8081

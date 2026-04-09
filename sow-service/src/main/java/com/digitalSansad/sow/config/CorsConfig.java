@@ -6,40 +6,50 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+        private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class);
 
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000"));
+                logger.info("Configuring CORS");
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type"));
+                config.setAllowedOrigins(List.of("http://localhost:3000", "https://digital-sansad-project.vercel.app"));
+                logger.debug("CORS allowed origins: {}", config.getAllowedOrigins());
 
-        config.setExposedHeaders(List.of(
-                "Authorization"));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                logger.debug("CORS allowed methods: {}", config.getAllowedMethods());
 
-        config.setAllowCredentials(true);
+                config.setAllowedHeaders(List.of(
+                                "Authorization",
+                                "Content-Type"));
+                logger.debug("CORS allowed headers: {}", config.getAllowedHeaders());
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                config.setExposedHeaders(List.of(
+                                "Authorization"));
+                logger.debug("CORS exposed headers: {}", config.getExposedHeaders());
 
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+                config.setAllowCredentials(true);
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+                source.registerCorsConfiguration("/**", config);
+                logger.info("CORS configuration completed and registered for all paths");
+                return source;
+        }
+
+        @Bean
+        public RestTemplate restTemplate() {
+                return new RestTemplate();
+        }
 }

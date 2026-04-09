@@ -1,5 +1,7 @@
 package com.digitalSansad.sow.config;
 
+//not being used anywhere
+
 public class PemUtils {
 
   public static byte[] parsePEM(byte[] pem) {
