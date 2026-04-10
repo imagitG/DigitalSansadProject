@@ -27,11 +27,11 @@ RUN pip install --upgrade pip \
 # -------------------------------
 # 🤖 Copy ML Model (IMPORTANT)
 # -------------------------------
-# # 👉 ensures NO huggingface download at runtime
-# COPY models/ models/
 
+ENV HF_HOME=/app/.cache
+
+# 🔥 DOWNLOAD MODEL DURING BUILD
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
-
 # -------------------------------
 # 📂 Copy Application Code
 # -------------------------------
