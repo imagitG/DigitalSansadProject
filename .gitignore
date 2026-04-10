@@ -62,8 +62,7 @@ pip-log.txt
 ############################
 # ML Models & Artifacts
 ############################
-models/
-**/models/
+
 *.bin
 *.onnx
 *.safetensors

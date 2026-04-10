@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # 🔥 USE LOCAL PATH
-# MODEL_PATH = os.path.join(os.getcwd(), "models", "all-MiniLM-L6-v2")
+MODEL_PATH = os.path.join(os.getcwd(), "models", "all-MiniLM-L6-v2")
 
 _model = None
 
@@ -25,10 +25,10 @@ class SentenceTransformerEmbeddings(Embeddings):
             if _model is None:
                 logger.info(f"🔄 Loading embedding model: {MODEL_NAME}")
                 _model = SentenceTransformer(
-                    # MODEL_PATH,
-                    MODEL_NAME,
+                    MODEL_PATH,
+                    # MODEL_NAME,
                     device="cpu",
-                    cache_folder=os.getenv("HF_HOME", "./models"),  
+                    cache_folder=os.getenv("HF_HOME", "./models")
                     # local_files_only=True   # 🔥 FORCE OFFLINE
                 )
                 logger.info(f"✅ Embedding model loaded successfully")

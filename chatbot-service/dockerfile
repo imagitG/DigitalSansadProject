@@ -1,54 +1,23 @@
-# -------------------------------
-# 🐍 Base Image
-# -------------------------------
 FROM python:3.11-slim
 
-# -------------------------------
-# ⚙️ System Dependencies
-# -------------------------------
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# -------------------------------
-# 📁 Working Directory
-# -------------------------------
 WORKDIR /app
 
-# -------------------------------
-# 📦 Install Python Dependencies
-# -------------------------------
 COPY requirements.txt .
 
 RUN pip install --upgrade pip \
-    && pip install --prefer-binary --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-# -------------------------------
-# 🤖 Copy ML Model (IMPORTANT)
-# -------------------------------
-
-ENV HF_HOME=/app/.cache
-
-# 🔥 DOWNLOAD MODEL DURING BUILD
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
-# -------------------------------
-# 📂 Copy Application Code
-# -------------------------------
+# ✅ Copy everything including models
 COPY . .
 
-# -------------------------------
-# ⚙️ Environment Variables
-# -------------------------------
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# -------------------------------
-# 🌐 Expose Port
-# -------------------------------
 EXPOSE 8000
 
-# -------------------------------
-# 🚀 Start Server
-# -------------------------------
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
