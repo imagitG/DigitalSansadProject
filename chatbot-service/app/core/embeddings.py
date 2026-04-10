@@ -28,8 +28,8 @@ class SentenceTransformerEmbeddings(Embeddings):
                     # MODEL_PATH,
                     MODEL_NAME,
                     device="cpu",
-                    cache_folder=os.getenv("HF_HOME", "./models"),  # optional cache
-                    local_files_only=True   # 🔥 FORCE OFFLINE
+                    cache_folder=os.getenv("HF_HOME", "./models"),  
+                    # local_files_only=True   # 🔥 FORCE OFFLINE
                 )
                 logger.info(f"✅ Embedding model loaded successfully")
             self.model = _model
