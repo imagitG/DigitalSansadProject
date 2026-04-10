@@ -1,45 +1,87 @@
-# app/api/ingest.py
-
-from fastapi import APIRouter, UploadFile, File
-from pathlib import Path
-from app.loaders.pdf_loader import load_and_chunk_pdf
+from fastapi import APIRouter, HTTPException
+import logging
+from app.utils.r2_client import R2Client
+from app.loaders.pdf_loader import load_and_chunk_pdf_from_bytes
 from app.core.vector_store import add_documents_to_faiss
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ingest", tags=["Ingestion"])
 
-DATA_DIR = Path("data/raw")
+r2 = R2Client()
+
 
 @router.post("/")
-def ingest_all_documents():
-    all_docs = []
+def ingest_from_r2(prefix: str = "general/"):
+    try:
+        logger.info(f"🔍 Ingest request started with prefix: {prefix}")
+        
+        if not prefix:
+            logger.warning("⚠️ Empty prefix provided")
+            raise HTTPException(status_code=400, detail="Prefix cannot be empty")
+        
+        all_docs = []
 
-    for domain_dir in DATA_DIR.iterdir():
-        if not domain_dir.is_dir():
-            continue
+        logger.debug(f"📄 Listing files from R2 with prefix: {prefix}")
+        keys = r2.list_files(prefix)
+        
+        if not keys:
+            logger.warning(f"⚠️ No files found with prefix: {prefix}")
+            return {
+                "status": "success",
+                "files_processed": 0,
+                "documents_indexed": 0,
+                "warning": "No files found for ingestion"
+            }
+        
+        logger.info(f"📄 Found {len(keys)} files to process")
 
-        agent_id = domain_dir.name  # loksabha / sow / business
+        for idx, key in enumerate(keys, 1):
+            try:
+                logger.debug(f"Processing file {idx}/{len(keys)}: {key}")
+                file_bytes = r2.download_file_bytes(key)
 
-        for pdf_path in domain_dir.glob("*.pdf"):
-             docs = load_and_chunk_pdf(
-                path=str(pdf_path),
-                agent_id=agent_id
-            )
-             all_docs.extend(docs)
+                agent_id = prefix.strip("/")
 
-    add_documents_to_faiss(all_docs)
+                docs = load_and_chunk_pdf_from_bytes(
+                    file_bytes=file_bytes,
+                    source=key,
+                    agent_id=agent_id
+                )
 
-    return {
-        "status": "success",
-        "documents_indexed": len(all_docs)
-    }
+                all_docs.extend(docs)
+                logger.info(f"✅ Successfully processed {key}: {len(docs)} documents")
+            
+            except Exception as e:
+                logger.error(f"❌ Error processing file {key}: {str(e)}")
+                continue
+        
+        if all_docs:
+            logger.debug(f"💎 Adding {len(all_docs)} documents to FAISS")
+            add_documents_to_faiss(all_docs)
+            logger.info(f"✅ Successfully indexed {len(all_docs)} documents")
+        else:
+            logger.warning(f"⚠️ No documents were successfully processed from {len(keys)} files")
+
+        return {
+            "status": "success",
+            "files_processed": len(keys),
+            "documents_indexed": len(all_docs)
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error during ingestion: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
 
 
 @router.post("/upload")
-async def ingest_uploaded_file(file: UploadFile = File(...)):
+async def ingest_uploaded_file():
     """
     Receive a PDF file from sow-service, save it to data/raw/general,
     and ingest it with agent_id = "general"
-    """
+    
     # Ensure data/raw/general directory exists
     general_dir = DATA_DIR / "general"
     general_dir.mkdir(parents=True, exist_ok=True)
@@ -64,3 +106,6 @@ async def ingest_uploaded_file(file: UploadFile = File(...)):
         "filename": file.filename,
         "documents_indexed": len(docs)
     }
+    """
+    logger.debug("🔍 Upload endpoint called - currently disabled (automatic ingestion)")
+    pass

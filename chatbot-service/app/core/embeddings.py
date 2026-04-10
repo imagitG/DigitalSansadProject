@@ -1,9 +1,15 @@
-# app/core/embeddings.py
-
 from sentence_transformers import SentenceTransformer
 from langchain_core.embeddings import Embeddings
+import os
+import logging
 
-MODEL_PATH = "models/all-MiniLM-L6-v2"
+logger = logging.getLogger(__name__)
+
+# 🔥 Use HuggingFace model name (NOT local path)
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+# 🔥 USE LOCAL PATH
+# MODEL_PATH = os.path.join(os.getcwd(), "models", "all-MiniLM-L6-v2")
 
 _model = None
 
@@ -14,23 +20,57 @@ class SentenceTransformerEmbeddings(Embeddings):
     """
 
     def __init__(self):
-        global _model
-        if _model is None:
-            _model = SentenceTransformer(MODEL_PATH, device="cpu")
-        self.model = _model
+        try:
+            global _model
+            if _model is None:
+                logger.info(f"🔄 Loading embedding model: {MODEL_NAME}")
+                _model = SentenceTransformer(
+                    # MODEL_PATH,
+                    MODEL_NAME,
+                    device="cpu",
+                    cache_folder=os.getenv("HF_HOME", "./models")  # optional cache
+                )
+                logger.info(f"✅ Embedding model loaded successfully")
+            self.model = _model
+        except Exception as e:
+            logger.error(f"❌ Failed to load embedding model: {str(e)}")
+            raise
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return self.model.encode(
-            texts,
-            normalize_embeddings=True
-        ).tolist()
+        try:
+            if not texts:
+                logger.warning("⚠️ embed_documents called with empty text list")
+                return []
+            logger.debug(f"📄 Embedding {len(texts)} documents")
+            embeddings = self.model.encode(
+                texts,
+                normalize_embeddings=True
+            ).tolist()
+            return embeddings
+        except Exception as e:
+            logger.error(f"❌ Error embedding documents: {str(e)}")
+            raise
 
     def embed_query(self, text: str) -> list[float]:
-        return self.model.encode(
-            text,
-            normalize_embeddings=True
-        ).tolist()
+        try:
+            if not text:
+                logger.warning("⚠️ embed_query called with empty text")
+                return []
+            logger.debug(f"🔍 Embedding query: {text[:50]}...")
+            embedding = self.model.encode(
+                text,
+                normalize_embeddings=True
+            ).tolist()
+            return embedding
+        except Exception as e:
+            logger.error(f"❌ Error embedding query: {str(e)}")
+            raise
 
 
 def get_embeddings():
-    return SentenceTransformerEmbeddings()
+    try:
+        logger.debug("🔏 Getting embeddings instance")
+        return SentenceTransformerEmbeddings()
+    except Exception as e:
+        logger.error(f"❌ Failed to get embeddings: {str(e)}")
+        raise

@@ -24,3 +24,7 @@ pypdf>=3.17
 
 # ---------- LLM SDK ----------
 google-generativeai>=0.3
+
+# 🔥 NEW (R2 SUPPORT)
+boto3>=1.34
+botocore>=1.34
